@@ -1,0 +1,253 @@
+===========================================================
+README - Setting up C/C++ Development in VS Code (Windows)
+===========================================================
+
+This guide covers:
+1. Installing VS Code Community Edition
+2. Installing compiler toolchain (MSYS2 + MinGW-w64)
+3. Configuring environment
+4. Creating a simple HelloWorld project with CMake
+5. Extending to a multi-file project with subdirectories
+
+-----------------------------------------------------------
+1. Install VS Code Community Edition
+-----------------------------------------------------------
+- Download from https://code.visualstudio.com/
+- Run installer, keep defaults unless you prefer custom paths.
+
+-----------------------------------------------------------
+2. Install C/C++ Extension
+-----------------------------------------------------------
+- Open VS Code.
+- Press Ctrl+Shift+X → Extensions.
+- Search for "C/C++" (Microsoft) → Install.
+- Optional: Install "CMake Tools" extension for easier integration.
+
+-----------------------------------------------------------
+3. Install Compiler (MSYS2 + MinGW-w64)
+-----------------------------------------------------------
+- Download MSYS2 from https://www.msys2.org
+- Install to C:\msys64
+- Open MSYS2 terminal and run:
+    pacman -Syu
+    pacman -S mingw-w64-x86_64-gcc gdb make cmake
+- Add C:\msys64\mingw64\bin to your Windows PATH.
+- Verify installation:
+    g++ --version
+    gdb --version
+    cmake --version
+
+-----------------------------------------------------------
+4. Simple HelloWorld Project
+-----------------------------------------------------------
+
+Project Structure:
+HelloWorld/
+├── main.cpp
+├── CMakeLists.txt
+└── .vscode/
+    ├── tasks.json
+    └── launch.json
+
+main.cpp:
+-----------------------------------
+#include <iostream>
+using namespace std;
+
+int main() {
+    cout << "Hello, World!" << endl;
+    return 0;
+}
+-----------------------------------
+
+CMakeLists.txt:
+-----------------------------------
+cmake_minimum_required(VERSION 3.10)
+project(HelloWorld LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_executable(helloworld main.cpp)
+-----------------------------------
+
+.vscode/tasks.json:
+-----------------------------------
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cmake build",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--build", "build"],
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}
+-----------------------------------
+
+.vscode/launch.json:
+-----------------------------------
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug HelloWorld",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/helloworld.exe",
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb.exe"
+    }
+  ]
+}
+-----------------------------------
+
+Build & Run:
+    cmake -S . -B build
+    cmake --build build
+    ./build/helloworld.exe
+
+-----------------------------------------------------------
+5. Complex Project with Subdirectories
+-----------------------------------------------------------
+
+Project Structure:
+ComplexProject/
+├── CMakeLists.txt
+├── src/
+│   ├── main.cpp
+│   └── CMakeLists.txt
+├── lib/
+│   ├── helper.c
+│   ├── helper.h
+│   └── CMakeLists.txt
+└── .vscode/
+    ├── tasks.json
+    └── launch.json
+
+src/main.cpp:
+-----------------------------------
+#include <iostream>
+#include "helper.h"
+
+int main() {
+    std::cout << "Complex Project!" << std::endl;
+    print_message("Hello from C helper!");
+    return 0;
+}
+-----------------------------------
+
+lib/helper.c:
+-----------------------------------
+#include "helper.h"
+#include <stdio.h>
+
+void print_message(const char* msg) {
+    printf("%s\n", msg);
+}
+-----------------------------------
+
+lib/helper.h:
+-----------------------------------
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void print_message(const char* msg);
+
+#ifdef __cplusplus
+}
+#endif
+-----------------------------------
+
+Top-level CMakeLists.txt:
+-----------------------------------
+cmake_minimum_required(VERSION 3.10)
+project(ComplexProject LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_subdirectory(lib)
+add_subdirectory(src)
+-----------------------------------
+
+src/CMakeLists.txt:
+-----------------------------------
+add_executable(complex main.cpp)
+target_link_libraries(complex helper)
+-----------------------------------
+
+lib/CMakeLists.txt:
+-----------------------------------
+add_library(helper helper.c)
+-----------------------------------
+
+.vscode/tasks.json:
+-----------------------------------
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cmake build",
+      "type": "shell",
+      "command": "cmake",
+      "args": ["--build", "build"],
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}
+-----------------------------------
+
+.vscode/launch.json:
+-----------------------------------
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug ComplexProject",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/src/complex.exe",
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb.exe"
+    }
+  ]
+}
+-----------------------------------
+
+Build & Run:
+    cmake -S . -B build
+    cmake --build build
+    ./build/src/complex.exe
+
+-----------------------------------------------------------
+6. Workflow Summary
+-----------------------------------------------------------
+1. Install VS Code + C/C++ extension.
+2. Install MSYS2 → GCC, GDB, CMake.
+3. Add compiler to PATH.
+4. Create project folder with source files.
+5. Write CMakeLists.txt (simple or multi-directory).
+6. Configure build:
+    cmake -S . -B build
+    cmake --build build
+7. Run executable.
+8. Debug with VS Code (F5).
+
+-----------------------------------------------------------
+Tips for Future Projects
+-----------------------------------------------------------
+- Use CMake for scalability (handles many files, subdirectories).
+- Use tasks.json for builds and launch.json for debugging.
+- Always link with g++ when mixing C and C++.
+- Use extern "C" in headers for interoperability.
+- Install CMake Tools extension for one-click configure/build/debug.
